@@ -23,18 +23,6 @@ fi
 
 log "Preparo la sessione Termux-X11..."
 
-# Controlla se il server X11 è già in esecuzione, e in tal caso fermalo
-log "Controllo e fermo eventuali display X11 esistenti..."
-if pgrep -x "Xorg" >/dev/null || pgrep -x "termux-x11" >/dev/null; then
-    log "Display X11 già in esecuzione, fermo i processi..."
-    pkill -f "Xorg" 2>/dev/null
-    pkill -f "termux-x11" 2>/dev/null
-    sleep 2
-    log "Processi X11 terminati."
-else
-    log "Nessun server X attivo, procedo."
-fi
-
 # Avvio della sessione X11
 export XDG_RUNTIME_DIR=${TMPDIR}
 termux-x11 :0 >/dev/null 2>&1 &
@@ -54,18 +42,25 @@ proot-distro login ubuntu --shared-tmp -- /bin/bash -c '
     export DISPLAY=:0
     export PULSE_SERVER=127.0.0.1
     export XDG_RUNTIME_DIR=${TMPDIR}
+
     echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Chiudo eventuali processi X11 aperti..."
+    
+    # Fermare i processi X11 già esistenti, se presenti
     if pgrep -x "Xorg" >/dev/null || pgrep -x "termux-x11" >/dev/null; then
-        echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Server X già in esecuzione, termino i processi..."
-        pkill -f "termux.x11" 2>/dev/null
+        echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Server X già in esecuzione, fermo i processi..."
         pkill -f "Xorg" 2>/dev/null
+        pkill -f "termux-x11" 2>/dev/null
         sleep 2
-        echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Server X terminato."
+        echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Processi X11 terminati."
     else
         echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Nessun server X attivo, procedo."
     fi
+
+    # Rimuovere eventuali file di blocco
     echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Rimuovo eventuali file di blocco..."
     rm -f /tmp/.X0-lock /tmp/.X11-unix/X0
+
+    # Avvio del server dbus e XFCE
     service dbus start
     su main -c "DISPLAY=:0 startxfce4"
 '
