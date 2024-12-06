@@ -22,6 +22,20 @@ if [[ $? -ne 0 ]]; then
 fi
 
 log "Preparo la sessione Termux-X11..."
+
+# Controlla se il server X11 è già in esecuzione, e in tal caso fermalo
+log "Controllo e fermo eventuali display X11 esistenti..."
+if pgrep -x "Xorg" >/dev/null || pgrep -x "termux-x11" >/dev/null; then
+    log "Display X11 già in esecuzione, fermo i processi..."
+    pkill -f "Xorg" 2>/dev/null
+    pkill -f "termux-x11" 2>/dev/null
+    sleep 2
+    log "Processi X11 terminati."
+else
+    log "Nessun server X attivo, procedo."
+fi
+
+# Avvio della sessione X11
 export XDG_RUNTIME_DIR=${TMPDIR}
 termux-x11 :0 >/dev/null 2>&1 &
 sleep 5  # Aumentato il tempo per garantire l'inizializzazione completa
