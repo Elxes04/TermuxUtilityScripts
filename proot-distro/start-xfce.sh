@@ -23,9 +23,9 @@ fi
 
 log "Preparo la sessione Termux-X11..."
 
-# Avvio della sessione X11
+# Avvio della sessione X11 (usando display :1)
 export XDG_RUNTIME_DIR=${TMPDIR}
-termux-x11 :0 >/dev/null 2>&1 &
+termux-x11 :1 >/dev/null 2>&1 &
 sleep 5  # Aumentato il tempo per garantire l'inizializzazione completa
 
 log "Avvio l'attività principale di Termux-X11..."
@@ -39,7 +39,7 @@ sleep 3  # Aggiunto un ulteriore ritardo per la stabilizzazione
 
 log "Avvio Ubuntu con Proot e XFCE..."
 proot-distro login ubuntu --shared-tmp -- /bin/bash -c '
-    export DISPLAY=:0
+    export DISPLAY=:1  # Modifica qui per usare il display :1
     export PULSE_SERVER=127.0.0.1
     export XDG_RUNTIME_DIR=${TMPDIR}
 
@@ -58,11 +58,11 @@ proot-distro login ubuntu --shared-tmp -- /bin/bash -c '
 
     # Rimuovere eventuali file di blocco
     echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Rimuovo eventuali file di blocco..."
-    rm -f /tmp/.X0-lock /tmp/.X11-unix/X0
+    rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
 
     # Avvio del server dbus e XFCE
     service dbus start
-    su main -c "DISPLAY=:0 startxfce4"
+    su main -c "DISPLAY=:1 startxfce4"
 '
 if [[ $? -eq 0 ]]; then
     log "Sessione Ubuntu con XFCE avviata correttamente."
