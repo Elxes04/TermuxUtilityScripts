@@ -2,7 +2,7 @@
 
 # Funzione per loggare messaggi
 log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
 log "Riavvio il servizio dbus..."
@@ -24,7 +24,7 @@ fi
 log "Preparo la sessione Termux-X11..."
 export XDG_RUNTIME_DIR=${TMPDIR}
 termux-x11 :0 >/dev/null 2>&1 &
-sleep 3
+sleep 5  # Aumentato il tempo per garantire l'inizializzazione completa
 
 log "Avvio l'attività principale di Termux-X11..."
 if am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null 2>&1; then
@@ -33,27 +33,27 @@ else
     log "Errore nell'avvio di Termux-X11."
     exit 1
 fi
-sleep 1
+sleep 3  # Aggiunto un ulteriore ritardo per la stabilizzazione
 
 log "Avvio Ubuntu con Proot e XFCE..."
 proot-distro login ubuntu --shared-tmp -- /bin/bash -c '
     export DISPLAY=:0
     export PULSE_SERVER=127.0.0.1
     export XDG_RUNTIME_DIR=${TMPDIR}
-    echo "[ $(date +%Y-%m-%d %H:%M:%S) ] Chiudo eventuali processi X11 aperti..."
+    echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Chiudo eventuali processi X11 aperti..."
     if pgrep -x "Xorg" >/dev/null || pgrep -x "termux-x11" >/dev/null; then
-        echo "[ $(date +%Y-%m-%d %H:%M:%S) ] Server X già in esecuzione, termino i processi..."
+        echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Server X già in esecuzione, termino i processi..."
         pkill -f "termux.x11" 2>/dev/null
         pkill -f "Xorg" 2>/dev/null
         sleep 2
-        echo "[ $(date +%Y-%m-%d %H:%M:%S) ] Server X terminato."
+        echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Server X terminato."
     else
-        echo "[ $(date +%Y-%m-%d %H:%M:%S) ] Nessun server X attivo, procedo."
+        echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Nessun server X attivo, procedo."
     fi
-    echo "[ $(date +%Y-%m-%d %H:%M:%S) ] Rimuovo eventuali file di blocco..."
+    echo "[ $(date +%Y-%m-%d\ %H:%M:%S) ] Rimuovo eventuali file di blocco..."
     rm -f /tmp/.X0-lock /tmp/.X11-unix/X0
     service dbus start
-    su main -c "startxfce4"
+    su main -c "DISPLAY=:0 startxfce4"
 '
 if [[ $? -eq 0 ]]; then
     log "Sessione Ubuntu con XFCE avviata correttamente."
